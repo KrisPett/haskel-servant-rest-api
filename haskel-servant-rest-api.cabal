@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -27,10 +27,12 @@ library
   exposed-modules:
       Server
       Configs.Database
+      Configs.Seed
       Routes.HomePage
       Services.MessageService
       Middlewares.ErrorHandler
       Entity.Models
+      Helpers.Time
   other-modules:
       Paths_haskel_servant_rest_api
   autogen-modules:

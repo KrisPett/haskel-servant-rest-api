@@ -60,10 +60,12 @@ library:
   exposed-modules:
     - Server
     - Configs.Database
+    - Configs.Seed
     - Routes.HomePage
     - Services.MessageService
     - Middlewares.ErrorHandler
     - Entity.Models
+    - Helpers.Time
 
 executables:
   haskel-servant-rest-api-exe:

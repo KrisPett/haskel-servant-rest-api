@@ -17,3 +17,5 @@ docker exec -it haskel-dev bash
 stack build
 stack exec haskel-servant-rest-api-exe
 ```
+
+stack build && stack exec haskel-servant-rest-api-exe

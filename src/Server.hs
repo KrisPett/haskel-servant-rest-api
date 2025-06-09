@@ -8,6 +8,7 @@ module Server
 where
 
 import Configs.Database
+import Configs.Seed (seedDB)
 import Control.Monad.IO.Class (liftIO)
 import Data.Pool
 import Database.Persist.Sql (SqlBackend)
@@ -27,11 +28,12 @@ startApp :: IO ()
 startApp = do
   putStrLn "Starting server on port 8080..."
   putStrLn "Connecting to database..."
-  
+
   pool <- initConnectionPool connStr
   initDB pool
-  
   putStrLn "Database initialized successfully"
+  seedDB pool
+  putStrLn "Database seeded with initial data"
   run 8080 (app pool)
 
 app :: Pool SqlBackend -> Application
