@@ -1,0 +1,25 @@
+# docker compose up -d
+
+version: '3.9'
+services:
+  haskel-servant-postgres:
+    container_name: haskel-servant-postgres
+    image: postgres:16.0
+    environment:
+      POSTGRES_DB: haskel-servant-postgres-db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - haskel_servant_postgres_postgres_data:/var/lib/postgresql/data
+    networks:
+      - haskel-servant-postgres-network
+
+networks:
+  haskel-servant-postgres-network:
+    driver: bridge
+    name: haskel-servant-postgres-network
+
+volumes:
+  haskel_servant_postgres_postgres_data:

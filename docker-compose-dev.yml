@@ -1,0 +1,29 @@
+# docker compose -f docker-compose-dev.yml up -d
+# docker exec -it haskel-dev bash
+# stack build
+# stack exec myproj-exe
+
+version: '3.9'
+services:
+  haskel-dev:
+    container_name: haskel-dev
+    image: haskell-postgres:latest
+    privileged: true
+    ports:
+      - "1000:8080"
+    volumes:
+      - ./:/workdir
+      - ~/.stack:/root/.stack
+    working_dir: /workdir
+    networks:
+      - haskel-servant-postgres-network
+    tty: true
+    stdin_open: true
+
+networks:
+  haskel-servant-postgres-network:
+    driver: bridge
+    name: haskel-servant-postgres-network
+
+volumes:
+  haskel_servant_postgres_postgres_data:
