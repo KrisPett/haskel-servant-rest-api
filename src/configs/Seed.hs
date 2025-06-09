@@ -3,11 +3,14 @@
 module Configs.Seed (seedDB) where
 
 import Control.Monad (when)
+import Control.Monad.IO.Class (liftIO)
 import Data.Pool (Pool)
 import Data.Time (UTCTime, defaultTimeLocale, parseTimeM)
+import Data.Time.Clock (getCurrentTime)
 import Database.Persist (Entity (..))
 import Database.Persist.Sql (SelectOpt (LimitTo), SqlBackend, SqlPersistT, insert_, runSqlPool, selectList)
 import Entity.Models
+import Helpers.EntityHelpers (newAiGeneratedArticle, newAiNewsCategorized, newAiNewsResponse)
 import Helpers.Time (parseUTC)
 
 seedDB :: Pool SqlBackend -> IO ()
@@ -17,15 +20,15 @@ seed :: SqlPersistT IO ()
 seed = do
   existing <- selectList [] [LimitTo 1] :: SqlPersistT IO [Entity AiGeneratedArticle]
   when (null existing) $ do
+    now <- liftIO getCurrentTime
     -- AiGeneratedArticle entries
+    -- Insert a new AiGeneratedArticle with alternative constructor
     insert_ $
-      AiGeneratedArticle
-        { aiGeneratedArticleCreatedAt = parseUTC "2024-04-01 00:00:00",
-          aiGeneratedArticleUpdatedAt = parseUTC "2024-04-01 00:00:00",
-          aiGeneratedArticleTitle = "The Ethics of AI",
-          aiGeneratedArticleDescription = "Exploring moral implications of AI",
-          aiGeneratedArticleContent = "Ethics in AI covers bias, privacy, and accountability..."
-        }
+      newAiGeneratedArticle
+        now
+        "The Ethics of AI"
+        "Exploring moral implications of AI"
+        "Ethics in AI covers bias, privacy, and accountability..."
 
     insert_ $
       AiGeneratedArticle

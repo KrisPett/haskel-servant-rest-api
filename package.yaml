@@ -66,6 +66,7 @@ library:
     - Middlewares.ErrorHandler
     - Entity.Models
     - Helpers.Time
+    - Helpers.EntityHelpers
 
 executables:
   haskel-servant-rest-api-exe:

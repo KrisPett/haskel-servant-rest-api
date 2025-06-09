@@ -33,6 +33,7 @@ library
       Middlewares.ErrorHandler
       Entity.Models
       Helpers.Time
+      Helpers.EntityHelpers
   other-modules:
       Paths_haskel_servant_rest_api
   autogen-modules:

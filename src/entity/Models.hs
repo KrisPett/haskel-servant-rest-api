@@ -18,11 +18,10 @@ import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Aeson as Aeson
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Database.Persist.Sql (Migration)
+import Database.Persist (Entity (..))
+import Database.Persist.Sql (Migration, PersistFieldSql (..), SqlType (SqlOther))
 import Database.Persist.TH
 import GHC.Generics (Generic)
-import Database.Persist (Entity(..))
-import Database.Persist.Sql (PersistFieldSql(..), SqlType(SqlOther))
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
@@ -73,6 +72,7 @@ Message
 -- instance FromJSON AiNewsResponse
 
 instance ToJSON Message
+
 instance FromJSON Message
 
 instance ToJSON (Entity Message) where
