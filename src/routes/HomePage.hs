@@ -24,7 +24,6 @@ type PageAPI =
     :<|> "messages" :> Get '[JSON] [Entity Message]
     :<|> "messages" :> ReqBody '[JSON] Text :> Post '[JSON] (Entity Message)
 
--- Updated pageServer to accept database pool
 pageServer :: Pool SqlBackend -> Server PageAPI
 pageServer pool = homeHandler :<|> createNewsPageHandler :<|> getAllMessages :<|> createMessage
   where
@@ -34,7 +33,6 @@ pageServer pool = homeHandler :<|> createNewsPageHandler :<|> getAllMessages :<|
     createNewsPageHandler :: Handler String
     createNewsPageHandler = return "This is the Create News Page!"
 
-    -- Database operations
     getAllMessages :: Handler [Entity Message]
     getAllMessages = liftIO $ runDB pool $ selectList [] []
 

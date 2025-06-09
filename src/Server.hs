@@ -13,16 +13,20 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Pool
 import Database.Persist.Sql (SqlBackend)
 import Network.Wai.Handler.Warp
+import Routes.AiGeneratedArticlesAPI
 import Routes.HomePage
 import Servant
+import Services.AiGeneratedArticlesService
 
-type API = PageAPI
+type API = PageAPI :<|> AiGeneratedArticlesAPI
 
 api :: Proxy API
 api = Proxy
 
 server :: Pool SqlBackend -> Server API
-server pool = pageServer pool
+server pool =
+  let aiService = newAiGeneratedArticlesService pool
+   in pageServer pool :<|> aiGeneratedArticlesServer aiService
 
 startApp :: IO ()
 startApp = do

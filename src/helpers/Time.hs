@@ -4,7 +4,6 @@ module Helpers.Time (parseUTC) where
 
 import Data.Time (UTCTime, defaultTimeLocale, parseTimeM)
 
--- | Helper to parse a UTC string in the format "%Y-%m-%d %H:%M:%S"
 parseUTC :: String -> UTCTime
 parseUTC str = case parseTimeM True defaultTimeLocale "%Y-%m-%d %H:%M:%S" str of
   Just t -> t

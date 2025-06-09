@@ -12,7 +12,6 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
 import Servant
 
--- Custom error types
 data AppError
   = DatabaseError String
   | ValidationError String
@@ -48,14 +47,12 @@ instance ToJSON AppError where
         "code" .= (500 :: Int)
       ]
 
--- Helper to throw custom errors
 throwAppError :: AppError -> Handler a
 throwAppError (DatabaseError msg) = throwError err500 {errBody = encode (DatabaseError msg)}
 throwAppError (ValidationError msg) = throwError err400 {errBody = encode (ValidationError msg)}
 throwAppError (NotFoundError msg) = throwError err404 {errBody = encode (NotFoundError msg)}
 throwAppError (InternalError msg) = throwError err500 {errBody = encode (InternalError msg)}
 
--- Generic error handler for IO operations
 errorHandler :: IO a -> Handler a
 errorHandler action = liftIO $ action `catch` handleException
   where

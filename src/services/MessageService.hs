@@ -17,32 +17,26 @@ import Entity.Models (EntityField (..), Message (..), MessageId)
 import Middlewares.ErrorHandler
 import Servant
 
--- Create a new message
 createMessage :: Pool SqlBackend -> Text -> Handler MessageId
 createMessage pool content = do
   result <- liftIO $ runDB pool $ insert $ Message content
   return result
--- Alternative version with error handling
+
 createMessageSafe :: Pool SqlBackend -> Text -> Handler MessageId
 createMessageSafe pool content = do
   result <- errorHandler $ runDB pool $ insert $ Message content
   return result
 
--- Get all messages
 getAllMessages :: Pool SqlBackend -> Handler [Entity Message]
 getAllMessages pool = do
   result <- errorHandler $ runDB pool $ selectList [] []
   return result
 
--- Get all messages (content only, similar to your original)
 getAllMessagesContent :: Pool SqlBackend -> Handler [Text]
 getAllMessagesContent pool = do
   entities <- errorHandler $ runDB pool $ selectList [] []
   return $ map (messageContent . entityVal) entities
 
--- Additional useful functions with Persistent
-
--- Get message by ID
 getMessageById :: Pool SqlBackend -> MessageId -> Handler (Maybe (Entity Message))
 getMessageById pool msgId = do
   maybeMsg <- liftIO $ runDB pool $ get msgId
@@ -50,34 +44,28 @@ getMessageById pool msgId = do
     Just msg -> return $ Just (Entity msgId msg)
     Nothing -> return Nothing
 
--- Update message
 updateMessage :: Pool SqlBackend -> MessageId -> Text -> Handler ()
 updateMessage pool msgId newContent = do
   result <- liftIO $ runDB pool $ update msgId [MessageContent =. newContent]
   return result
 
--- Delete message
 deleteMessage :: Pool SqlBackend -> MessageId -> Handler ()
 deleteMessage pool msgId = do
   result <- errorHandler $ runDB pool $ delete msgId
   return result
 
--- Count messages
 countMessages :: Pool SqlBackend -> Handler Int
 countMessages pool = do
   count <- liftIO $ runDB pool $ count ([] :: [Filter Message])
   return count
 
--- Search messages containing specific text
 searchMessages :: Pool SqlBackend -> Text -> Handler [Entity Message]
 searchMessages pool searchTerm = do
-  -- Note: This is a simple contains search. For production, consider using PostgreSQL's full-text search
   result <- errorHandler $ runDB pool $ selectList [] []
   return $ filter (\entity -> searchTerm `isInfixOf` messageContent (entityVal entity)) result
   where
     isInfixOf needle haystack = needle `T.isInfixOf` haystack
 
--- Get messages with pagination
 getMessagesPaginated :: Pool SqlBackend -> Int -> Int -> Handler [Entity Message]
 getMessagesPaginated pool offset limit = do
   result <- errorHandler $ runDB pool $ selectList [] [OffsetBy offset, LimitTo limit]

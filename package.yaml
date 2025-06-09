@@ -62,7 +62,9 @@ library:
     - Configs.Database
     - Configs.Seed
     - Routes.HomePage
+    - Routes.AiGeneratedArticlesAPI
     - Services.MessageService
+    - Services.AiGeneratedArticlesService
     - Middlewares.ErrorHandler
     - Entity.Models
     - Helpers.Time
