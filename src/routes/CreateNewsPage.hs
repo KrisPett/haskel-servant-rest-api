@@ -15,35 +15,78 @@ where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
+import Data.Aeson.Types (fieldLabelModifier)
 import Data.Pool (Pool)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.Persist
 import Database.Persist.Sql (SqlBackend, fromSqlKey)
-import GHC.Generics (Generic)
-import Servant
 import Entity.Models
   ( AiGeneratedArticle (..),
     AiNewsCategorized (..),
   )
-import Services.AiGeneratedArticlesService (AiGeneratedArticlesService, AiGeneratedArticlesServiceI(findAll), runService)
-import Services.AiNewsCategorizedService (AiNewsCategorizedService, AiNewsCategorizedServiceI(findAll), runService)
--- import Services.CreateNewsPageService (getAIGeneratedArticles, getRecentNewsSearchResults)
+import GHC.Generics (Generic)
+import Servant
+import Services.AiGeneratedArticlesService (AiGeneratedArticlesService, AiGeneratedArticlesServiceI (findAll), runService)
+import Services.AiNewsCategorizedService (AiNewsCategorizedService, AiNewsCategorizedServiceI (findAll), runService)
 
--- | DTOs
 data RecentNewsSearchResultsDTO = RecentNewsSearchResultsDTO
-  { aiNewsCategorizedId :: Text,
-    recentNewsTitle :: Text,
-    recentNewsDescription :: Text
+  { rnsrId :: Text,
+    rnsrTitle :: Text,
+    rnsrDescription :: Text
   }
-  deriving (Show, Eq, Generic, ToJSON, FromJSON)
+  deriving (Show, Eq, Generic)
+
+instance ToJSON RecentNewsSearchResultsDTO where
+  toJSON =
+    genericToJSON
+      defaultOptions
+        { fieldLabelModifier = \f -> case f of
+            "rnsrId" -> "id"
+            "rnsrTitle" -> "title"
+            "rnsrDescription" -> "description"
+            other -> other
+        }
+
+instance FromJSON RecentNewsSearchResultsDTO where
+  parseJSON =
+    genericParseJSON
+      defaultOptions
+        { fieldLabelModifier = \f -> case f of
+            "rnsrId" -> "id"
+            "rnsrTitle" -> "title"
+            "rnsrDescription" -> "description"
+            other -> other
+        }
 
 data AIGeneratedArticlesDTO = AIGeneratedArticlesDTO
-  { aiGeneratedArticleId :: Text,
-    aiGeneratedTitle :: Text,
-    aiGeneratedDescription :: Text
+  { agaId :: Text,
+    agaTitle :: Text,
+    agaDescription :: Text
   }
-  deriving (Show, Eq, Generic, ToJSON, FromJSON)
+  deriving (Show, Eq, Generic)
+
+instance ToJSON AIGeneratedArticlesDTO where
+  toJSON =
+    genericToJSON
+      defaultOptions
+        { fieldLabelModifier = \f -> case f of
+            "agaId" -> "id"
+            "agaTitle" -> "title"
+            "agaDescription" -> "description"
+            other -> other
+        }
+
+instance FromJSON AIGeneratedArticlesDTO where
+  parseJSON =
+    genericParseJSON
+      defaultOptions
+        { fieldLabelModifier = \f -> case f of
+            "agaId" -> "id"
+            "agaTitle" -> "title"
+            "agaDescription" -> "description"
+            other -> other
+        }
 
 data CreateNewsPageDTO = CreateNewsPageDTO
   { inputDateFieldOption :: Text,
@@ -53,14 +96,13 @@ data CreateNewsPageDTO = CreateNewsPageDTO
   }
   deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
--- | API Endpoint
 type CreateNewsPageAPI = "create_news_page" :> QueryParam' '[Required, Strict] "selected_date" Text :> Get '[JSON] CreateNewsPageDTO
 
-createNewsPageServer
-  :: Pool SqlBackend
-  -> AiNewsCategorizedService
-  -> AiGeneratedArticlesService
-  -> Server CreateNewsPageAPI
+createNewsPageServer ::
+  Pool SqlBackend ->
+  AiNewsCategorizedService ->
+  AiGeneratedArticlesService ->
+  Server CreateNewsPageAPI
 createNewsPageServer _ categorizedService generatedService = getCreateNewsPageHandler
   where
     getCreateNewsPageHandler :: Text -> Handler CreateNewsPageDTO
@@ -77,20 +119,18 @@ createNewsPageServer _ categorizedService generatedService = getCreateNewsPageHa
               }
       return dto
 
--- | DTO Transformers
-
 toRecentNewsDTO :: Entity AiNewsCategorized -> RecentNewsSearchResultsDTO
-toRecentNewsDTO (Entity eid entity) =
+toRecentNewsDTO (Entity entityId entity) =
   RecentNewsSearchResultsDTO
-    { aiNewsCategorizedId = T.pack . show $ fromSqlKey eid,
-      recentNewsTitle = aiNewsCategorizedTitle entity,
-      recentNewsDescription = aiNewsCategorizedDescription entity
+    { rnsrId = T.pack . show $ fromSqlKey entityId,
+      rnsrTitle = aiNewsCategorizedTitle entity,
+      rnsrDescription = aiNewsCategorizedDescription entity
     }
 
 toAIGeneratedDTO :: Entity AiGeneratedArticle -> AIGeneratedArticlesDTO
-toAIGeneratedDTO (Entity eid entity) =
+toAIGeneratedDTO (Entity entityId entity) =
   AIGeneratedArticlesDTO
-    { aiGeneratedArticleId = T.pack . show $ fromSqlKey eid,
-      aiGeneratedTitle = aiGeneratedArticleTitle entity,
-      aiGeneratedDescription = aiGeneratedArticleDescription entity
+    { agaId = T.pack . show $ fromSqlKey entityId,
+      agaTitle = aiGeneratedArticleTitle entity,
+      agaDescription = aiGeneratedArticleDescription entity
     }
