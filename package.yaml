@@ -65,6 +65,8 @@ library:
     - Routes.AiGeneratedArticlesAPI
     - Services.MessageService
     - Services.AiGeneratedArticlesService
+    - Services.AiNewsCategorizedService
+    - Services.AiNewsResponseService
     - Middlewares.ErrorHandler
     - Entity.Models
     - Helpers.Time
