@@ -60,3 +60,14 @@ seed = do
           aiNewsResponseUrls = "http://policy-ai.org, http://openai.com/policy",
           aiNewsResponseText = "New regulations are being proposed to govern AI deployment..."
         }
+        
+    insert_ $
+      AiNewsResponse
+        { aiNewsResponseCreatedAt = parseUTC "2024-07-01 00:00:00",
+          aiNewsResponseUpdatedAt = parseUTC "2024-07-01 00:00:00",
+          aiNewsResponseInputMessage = "What’s new in AI policy?",
+          aiNewsResponseDate = "2024-07-01",
+          aiNewsResponseLinks = 5,
+          aiNewsResponseUrls = "http://policy-ai.org, http://openai.com/policy",
+          aiNewsResponseText = "New regulations are being proposed to govern AI deployment..."
+        }

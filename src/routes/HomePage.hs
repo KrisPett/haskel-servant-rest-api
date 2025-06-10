@@ -5,10 +5,8 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Routes.HomePage
-  ( PageAPI,
-    pageServer,
-    QueryResponseDTO (..),
-    HomePageDTO (..),
+  ( HomePageAPI,
+    homePageServer,
   )
 where
 
@@ -16,13 +14,13 @@ import Configs.Database (runDB)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
   ( FromJSON (..),
+    Options (fieldLabelModifier),
     ToJSON (..),
+    defaultOptions,
+    genericParseJSON,
+    genericToJSON,
     withObject,
     (.:),
-    defaultOptions,
-    Options (fieldLabelModifier),
-    genericToJSON,
-    genericParseJSON,
   )
 import Data.List (sortBy)
 import Data.Ord (Down (..), comparing)
@@ -33,6 +31,7 @@ import Database.Persist
 import Database.Persist.Sql (SqlBackend, fromSqlKey) -- Import fromSqlKey
 import Entity.Models (AiNewsResponse (..), EntityField (..), Message (..), MessageId)
 import GHC.Generics (Generic)
+import Helpers.Time (parseUrls)
 import Servant
 import Services.AiNewsResponseService (AiNewsResponseService, AiNewsResponseServiceI (..), runService)
 
@@ -53,45 +52,24 @@ instance FromJSON QueryResponseDTO where
   parseJSON = genericParseJSON queryResponseJsonOptions
 
 queryResponseJsonOptions :: Options
-queryResponseJsonOptions = defaultOptions
-  { fieldLabelModifier = \s ->
-      case s of
-        "queryResponseId" -> "id"
-        other -> other
-  }
+queryResponseJsonOptions =
+  defaultOptions
+    { fieldLabelModifier = \s ->
+        case s of
+          "queryResponseId" -> "id"
+          other -> other
+    }
 
 data HomePageDTO = HomePageDTO
   { queryResponses :: [QueryResponseDTO]
   }
   deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
-data SearchWebQuery = SearchWebQuery
-  { searchWebQueryInputText :: Text
-  }
-  deriving (Show, Eq, Generic, ToJSON)
+type HomePageAPI = "home_page" :> Get '[JSON] HomePageDTO
 
-instance FromJSON SearchWebQuery where
-  parseJSON = withObject "SearchWebQuery" $ \o -> do
-    inputText <- o .: "input_text"
-    return $ SearchWebQuery inputText
-
-type PageAPI =
-  "home" :> Get '[PlainText] String
-    :<|> "createNewsPage" :> Get '[PlainText] String
-    :<|> "home-page" :> Get '[JSON] HomePageDTO
-
-pageServer :: Pool SqlBackend -> AiNewsResponseService -> Server PageAPI
-pageServer pool aiNewsResponseService =
-  homeHandler
-    :<|> createNewsPageHandler
-    :<|> getHomePageHandler
+homePageServer :: Pool SqlBackend -> AiNewsResponseService -> Server HomePageAPI
+homePageServer pool aiNewsResponseService = getHomePageHandler
   where
-    homeHandler :: Handler String
-    homeHandler = return "Welcome to the Home Page!"
-
-    createNewsPageHandler :: Handler String
-    createNewsPageHandler = return "This is the Create News Page!"
-
     getHomePageHandler :: Handler HomePageDTO
     getHomePageHandler = do
       liftIO $ putStrLn "get_home_page"
@@ -116,9 +94,3 @@ modelToDTO (Entity entityId aiNewsResponse) =
       urls = parseUrls $ aiNewsResponseUrls aiNewsResponse,
       text = aiNewsResponseText aiNewsResponse
     }
-
-parseUrls :: Text -> [Text]
-parseUrls urlsText =
-  if T.null urlsText
-    then []
-    else T.splitOn "," urlsText
