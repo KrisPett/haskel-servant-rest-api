@@ -15,7 +15,6 @@ where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
-import Data.Aeson.Types (fieldLabelModifier)
 import Data.Pool (Pool)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -26,6 +25,7 @@ import Entity.Models
     AiNewsCategorized (..),
   )
 import GHC.Generics (Generic)
+import Helpers.Time (parseUrls)
 import Servant
 import Services.AiGeneratedArticlesService (AiGeneratedArticlesService, AiGeneratedArticlesServiceI (findAll), runService)
 import Services.AiNewsCategorizedService (AiNewsCategorizedService, AiNewsCategorizedServiceI (findAll), runService)
@@ -96,6 +96,14 @@ data CreateNewsPageDTO = CreateNewsPageDTO
   }
   deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
+data DTOBuilder = DTOBuilder
+  { builderInputDateFieldOption :: Text,
+    builderInputDateFieldOptions :: [Text],
+    builderRecentNewsSearchResults :: [Entity AiNewsCategorized],
+    builderAIGeneratedArticles :: [Entity AiGeneratedArticle]
+  }
+  deriving (Show, Eq, Generic)
+
 type CreateNewsPageAPI = "create_news_page" :> QueryParam' '[Required, Strict] "selected_date" Text :> Get '[JSON] CreateNewsPageDTO
 
 createNewsPageServer ::
@@ -110,14 +118,23 @@ createNewsPageServer _ categorizedService generatedService = getCreateNewsPageHa
       liftIO $ putStrLn $ "get_create_news_page - selected_date: " ++ T.unpack selectedDate
       recentNews <- Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll
       aiArticles <- Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll
-      let dto =
-            CreateNewsPageDTO
-              { inputDateFieldOption = selectedDate,
-                inputDateFieldOptions = [selectedDate],
-                recentNewsSearchResults = map toRecentNewsDTO recentNews,
-                aiGeneratedArticles = map toAIGeneratedDTO aiArticles
+      let dtoBuilder =
+            DTOBuilder
+              { builderInputDateFieldOption = selectedDate,
+                builderInputDateFieldOptions = parseUrls selectedDate,
+                builderRecentNewsSearchResults = recentNews,
+                builderAIGeneratedArticles = aiArticles
               }
-      return dto
+      pure $ toCreateNewsPageDTO dtoBuilder
+
+toCreateNewsPageDTO :: DTOBuilder -> CreateNewsPageDTO
+toCreateNewsPageDTO dtoBuilder =
+  CreateNewsPageDTO
+    { inputDateFieldOption = builderInputDateFieldOption dtoBuilder,
+      inputDateFieldOptions = builderInputDateFieldOptions dtoBuilder,
+      recentNewsSearchResults = map toRecentNewsDTO (builderRecentNewsSearchResults dtoBuilder),
+      aiGeneratedArticles = map toAIGeneratedDTO (builderAIGeneratedArticles dtoBuilder)
+    }
 
 toRecentNewsDTO :: Entity AiNewsCategorized -> RecentNewsSearchResultsDTO
 toRecentNewsDTO (Entity entityId entity) =

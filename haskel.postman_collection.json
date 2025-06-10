@@ -1,0 +1,102 @@
+{
+	"info": {
+		"_postman_id": "99d05791-fd47-42b0-9a56-a2143527bb13",
+		"name": "haskel",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24271801",
+		"_collection_link": "https://speeding-spaceship-871181.postman.co/workspace/Team-Workspace~6bef4b59-19d4-468d-8a9c-8a2b5f39d907/collection/24271801-99d05791-fd47-42b0-9a56-a2143527bb13?action=share&source=collection_link&creator=24271801"
+	},
+	"item": [
+		{
+			"name": "home",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/home_page",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"home_page"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "createNewsPage",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/create_news_page?selected_date=26/05/2025",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"create_news_page"
+					],
+					"query": [
+						{
+							"key": "selected_date",
+							"value": "26/05/2025"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "test2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/ai-articles",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"ai-articles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "test3",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"reqTitle\": \"AI and the Future\",\r\n  \"reqDescription\": \"A short summary about AI's role in the future.\",\r\n  \"reqContent\": \"The future of AI is bright and impactful...\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:1000/ai-articles",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"ai-articles"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
