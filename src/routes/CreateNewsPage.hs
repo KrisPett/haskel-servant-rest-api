@@ -13,6 +13,7 @@ module Routes.CreateNewsPage
   )
 where
 
+import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
 import Data.Pool (Pool)
@@ -102,18 +103,23 @@ createNewsPageServer ::
 createNewsPageServer _ categorizedService generatedService = getCreateNewsPageHandler
   where
     getCreateNewsPageHandler :: Text -> Handler CreateNewsPageDTO
-    getCreateNewsPageHandler selectedDate = do
-      liftIO $ putStrLn $ "get_create_news_page - selected_date: " ++ T.unpack selectedDate
-      recentNews <- Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll
-      aiArticles <- Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll
-      let dtoBuilder =
-            DTOBuilder
-              { builderInputDateFieldOption = selectedDate,
-                builderInputDateFieldOptions = parseUrls selectedDate,
-                builderRecentNewsSearchResults = recentNews,
-                builderAIGeneratedArticles = aiArticles
-              }
-      pure $ toCreateNewsPageDTO dtoBuilder
+    getCreateNewsPageHandler selectedDate =
+      handler `catchError` \e -> do
+        liftIO $ putStrLn $ "get_create_news_page failed: " ++ show e
+        throwError e
+      where
+        handler = do
+          liftIO $ putStrLn $ "get_create_news_page - selected_date: " ++ T.unpack selectedDate
+          recentNews <- Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll
+          aiArticles <- Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll
+          let dtoBuilder =
+                DTOBuilder
+                  { builderInputDateFieldOption = selectedDate,
+                    builderInputDateFieldOptions = parseUrls selectedDate,
+                    builderRecentNewsSearchResults = recentNews,
+                    builderAIGeneratedArticles = aiArticles
+                  }
+          pure $ toCreateNewsPageDTO dtoBuilder
 
 toCreateNewsPageDTO :: DTOBuilder -> CreateNewsPageDTO
 toCreateNewsPageDTO dtoBuilder =

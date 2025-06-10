@@ -76,6 +76,7 @@ aiGeneratedArticlesServer service =
     getArticleById articleId = do
       article <- runService service (findById articleId)
       return $ entityToResponse article
+      
     createArticle :: AiGeneratedArticleRequest -> Handler AiGeneratedArticleResponse
     createArticle req = do
       article <-
