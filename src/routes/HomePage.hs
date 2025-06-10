@@ -10,7 +10,6 @@ module Routes.HomePage
   )
 where
 
-import Configs.Database (runDB)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
   ( FromJSON (..),
@@ -19,8 +18,6 @@ import Data.Aeson
     defaultOptions,
     genericParseJSON,
     genericToJSON,
-    withObject,
-    (.:),
   )
 import Data.List (sortBy)
 import Data.Ord (Down (..), comparing)
@@ -28,8 +25,8 @@ import Data.Pool
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.Persist
-import Database.Persist.Sql (SqlBackend, fromSqlKey) -- Import fromSqlKey
-import Entity.Models (AiNewsResponse (..), EntityField (..), Message (..), MessageId)
+import Database.Persist.Sql (SqlBackend, fromSqlKey)
+import Entity.Models (AiNewsResponse (..))
 import GHC.Generics (Generic)
 import Helpers.Time (parseUrls)
 import Servant
@@ -44,6 +41,11 @@ data QueryResponseDTO = QueryResponseDTO
     text :: Text
   }
   deriving (Show, Eq, Generic)
+
+data HomePageDTO = HomePageDTO
+  { queryResponses :: [QueryResponseDTO]
+  }
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 instance ToJSON QueryResponseDTO where
   toJSON = genericToJSON queryResponseJsonOptions
@@ -60,32 +62,57 @@ queryResponseJsonOptions =
           other -> other
     }
 
-data HomePageDTO = HomePageDTO
-  { queryResponses :: [QueryResponseDTO]
-  }
-  deriving (Show, Eq, Generic, ToJSON, FromJSON)
+-- type HomePageAPI = "home_page" :> Get '[JSON] HomePageDTO
+
+-- homePageServer :: Pool SqlBackend -> AiNewsResponseService -> Server HomePageAPI
+-- homePageServer pool aiNewsResponseService = getHomePageHandler
+--   where
+--     getHomePageHandler :: Handler HomePageDTO
+--     getHomePageHandler = do
+--       liftIO $ putStrLn "get_home_page"
+--       buildDTO aiNewsResponseService
+
+-- buildDTO :: AiNewsResponseService -> Handler HomePageDTO
+-- buildDTO aiNewsResponseService = do
+--   aiNewsResponses <- runService aiNewsResponseService findAll
+
+--   let dtos = map modelToDTO aiNewsResponses
+--       sortedDtos = sortBy (comparing (Down . date)) dtos
+
+--   return $ HomePageDTO sortedDtos
+
+-- modelToDTO :: Entity AiNewsResponse -> QueryResponseDTO
+-- modelToDTO (Entity entityId aiNewsResponse) =
+--   QueryResponseDTO
+--     { queryResponseId = T.pack . show $ fromSqlKey entityId,
+--       message = aiNewsResponseInputMessage aiNewsResponse,
+--       date = aiNewsResponseDate aiNewsResponse,
+--       links = aiNewsResponseLinks aiNewsResponse,
+--       urls = parseUrls $ aiNewsResponseUrls aiNewsResponse,
+--       text = aiNewsResponseText aiNewsResponse
+--     }
+
+
 
 type HomePageAPI = "home_page" :> Get '[JSON] HomePageDTO
 
 homePageServer :: Pool SqlBackend -> AiNewsResponseService -> Server HomePageAPI
-homePageServer pool aiNewsResponseService = getHomePageHandler
+homePageServer _ aiNewsResponseService = getHomePageHandler
   where
     getHomePageHandler :: Handler HomePageDTO
     getHomePageHandler = do
       liftIO $ putStrLn "get_home_page"
-      buildDTO aiNewsResponseService
+      buildHomePageDTO aiNewsResponseService
 
-buildDTO :: AiNewsResponseService -> Handler HomePageDTO
-buildDTO aiNewsResponseService = do
+buildHomePageDTO :: AiNewsResponseService -> Handler HomePageDTO
+buildHomePageDTO aiNewsResponseService = do
   aiNewsResponses <- runService aiNewsResponseService findAll
-
-  let dtos = map modelToDTO aiNewsResponses
-      sortedDtos = sortBy (comparing (Down . date)) dtos
-
+  let dtos = map aiNewsResponseToDTO aiNewsResponses
+      sortedDtos = sortBy (comparing $ Down . date) dtos
   return $ HomePageDTO sortedDtos
 
-modelToDTO :: Entity AiNewsResponse -> QueryResponseDTO
-modelToDTO (Entity entityId aiNewsResponse) =
+aiNewsResponseToDTO :: Entity AiNewsResponse -> QueryResponseDTO
+aiNewsResponseToDTO (Entity entityId aiNewsResponse) =
   QueryResponseDTO
     { queryResponseId = T.pack . show $ fromSqlKey entityId,
       message = aiNewsResponseInputMessage aiNewsResponse,

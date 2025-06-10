@@ -9,7 +9,6 @@ where
 
 import Configs.Database
 import Configs.Seed (seedDB)
-import Control.Monad.IO.Class (liftIO)
 import Data.Pool
 import Database.Persist.Sql (SqlBackend)
 import Network.Wai.Handler.Warp
