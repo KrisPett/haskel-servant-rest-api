@@ -1,32 +1,32 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module Services.AiGeneratedArticlesService
-  ( AiGeneratedArticlesServiceI(..)
-  , AiGeneratedArticlesService(..)
-  , newAiGeneratedArticlesService
-  , runService
-  ) where
+  ( AiGeneratedArticlesServiceI (..),
+    AiGeneratedArticlesService (..),
+    newAiGeneratedArticlesService,
+    runService,
+  )
+where
 
+import Configs.Database (runDB)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.Pool (Pool)
 import Data.Text (Text)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist
 import Database.Persist.Sql (SqlBackend)
+import Entity.Models (AiGeneratedArticle (..), AiGeneratedArticleId, EntityField (AiGeneratedArticleId))
+import Helpers.EntityHelpers (newAiGeneratedArticle)
+import Middlewares.ErrorHandler (AppError (..), throwAppError)
 import Servant (Handler)
 
-import Configs.Database (runDB)
-import Entity.Models (AiGeneratedArticle(..), AiGeneratedArticleId, EntityField(AiGeneratedArticleId))
-import Helpers.EntityHelpers (newAiGeneratedArticle)
-import Middlewares.ErrorHandler (AppError(..), throwAppError)
-
-class Monad m => AiGeneratedArticlesServiceI m where
+class (Monad m) => AiGeneratedArticlesServiceI m where
   findAll :: m [Entity AiGeneratedArticle]
   findById :: AiGeneratedArticleId -> m (Entity AiGeneratedArticle)
   insertArticle :: Text -> Text -> Text -> m (Entity AiGeneratedArticle)
@@ -45,22 +45,19 @@ runService service action = runReaderT action service
 
 instance AiGeneratedArticlesServiceI ServiceM where
   findAll = do
-    service <- ask
-    result <- liftIO $ runDB (servicePool service) $ selectList [] []
-    case result of
-      articles -> return articles
+    pool <- asks servicePool
+    liftIO $ runDB pool $ selectList [] []
 
   findById articleId = do
-    service <- ask
-    result <- liftIO $ runDB (servicePool service) $ get articleId
+    pool <- asks servicePool
+    result <- liftIO $ runDB pool $ get articleId
     case result of
-      Nothing -> lift $ throwAppError $ NotFoundError $ "AiGeneratedArticle with id not found"
-      Just article -> return $ Entity articleId article
+      Nothing -> lift $ throwAppError $ NotFoundError "AiGeneratedArticle with id not found"
+      Just article -> pure $ Entity articleId article
 
   insertArticle title description content = do
-    service <- ask
+    pool <- asks servicePool
     now <- liftIO getCurrentTime
     let newArticle = newAiGeneratedArticle now title description content
-    result <- liftIO $ runDB (servicePool service) $ insert newArticle
-    case result of
-      articleId -> return $ Entity articleId newArticle
+    articleId <- liftIO $ runDB pool $ insert newArticle
+    pure $ Entity articleId newArticle
