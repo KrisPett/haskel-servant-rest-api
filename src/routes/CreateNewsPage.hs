@@ -30,6 +30,26 @@ import Servant
 import Services.AiGeneratedArticlesService (AiGeneratedArticlesService, AiGeneratedArticlesServiceI (findAll), runService)
 import Services.AiNewsCategorizedService (AiNewsCategorizedService, AiNewsCategorizedServiceI (findAll), runService)
 
+recentNewsOptions :: Options
+recentNewsOptions =
+  defaultOptions
+    { fieldLabelModifier = \f -> case f of
+        "rnsrId" -> "id"
+        "rnsrTitle" -> "title"
+        "rnsrDescription" -> "description"
+        other -> other
+    }
+
+aiArticlesOptions :: Options
+aiArticlesOptions =
+  defaultOptions
+    { fieldLabelModifier = \f -> case f of
+        "agaId" -> "id"
+        "agaTitle" -> "title"
+        "agaDescription" -> "description"
+        other -> other
+    }
+
 data RecentNewsSearchResultsDTO = RecentNewsSearchResultsDTO
   { rnsrId :: Text,
     rnsrTitle :: Text,
@@ -38,26 +58,10 @@ data RecentNewsSearchResultsDTO = RecentNewsSearchResultsDTO
   deriving (Show, Eq, Generic)
 
 instance ToJSON RecentNewsSearchResultsDTO where
-  toJSON =
-    genericToJSON
-      defaultOptions
-        { fieldLabelModifier = \f -> case f of
-            "rnsrId" -> "id"
-            "rnsrTitle" -> "title"
-            "rnsrDescription" -> "description"
-            other -> other
-        }
+  toJSON = genericToJSON recentNewsOptions
 
 instance FromJSON RecentNewsSearchResultsDTO where
-  parseJSON =
-    genericParseJSON
-      defaultOptions
-        { fieldLabelModifier = \f -> case f of
-            "rnsrId" -> "id"
-            "rnsrTitle" -> "title"
-            "rnsrDescription" -> "description"
-            other -> other
-        }
+  parseJSON = genericParseJSON recentNewsOptions
 
 data AIGeneratedArticlesDTO = AIGeneratedArticlesDTO
   { agaId :: Text,
@@ -67,26 +71,10 @@ data AIGeneratedArticlesDTO = AIGeneratedArticlesDTO
   deriving (Show, Eq, Generic)
 
 instance ToJSON AIGeneratedArticlesDTO where
-  toJSON =
-    genericToJSON
-      defaultOptions
-        { fieldLabelModifier = \f -> case f of
-            "agaId" -> "id"
-            "agaTitle" -> "title"
-            "agaDescription" -> "description"
-            other -> other
-        }
+  toJSON = genericToJSON aiArticlesOptions
 
 instance FromJSON AIGeneratedArticlesDTO where
-  parseJSON =
-    genericParseJSON
-      defaultOptions
-        { fieldLabelModifier = \f -> case f of
-            "agaId" -> "id"
-            "agaTitle" -> "title"
-            "agaDescription" -> "description"
-            other -> other
-        }
+  parseJSON = genericParseJSON aiArticlesOptions
 
 data CreateNewsPageDTO = CreateNewsPageDTO
   { inputDateFieldOption :: Text,
