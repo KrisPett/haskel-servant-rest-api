@@ -13,12 +13,17 @@ import Data.Pool
 import Database.Persist.Sql (SqlBackend)
 import Network.Wai.Handler.Warp
 import Routes.AiGeneratedArticlesAPI
+import Routes.CreateNewsPage
 import Routes.HomePage
 import Servant
 import Services.AiGeneratedArticlesService
 import Services.AiNewsResponseService
+import Services.AiNewsCategorizedService
 
-type API = HomePageAPI :<|> AiGeneratedArticlesAPI
+type API =
+  HomePageAPI
+    :<|> AiGeneratedArticlesAPI
+    :<|> CreateNewsPageAPI
 
 api :: Proxy API
 api = Proxy
@@ -27,7 +32,10 @@ server :: Pool SqlBackend -> Server API
 server pool =
   let aiService = newAiGeneratedArticlesService pool
       aiNewsResponseService = newAiNewsResponseService pool
-   in homePageServer pool aiNewsResponseService :<|> aiGeneratedArticlesServer aiService
+      aiNewsCategorizedService = newAiNewsCategorizedService pool
+   in homePageServer pool aiNewsResponseService
+        :<|> aiGeneratedArticlesServer aiService
+        :<|> createNewsPageServer pool aiNewsCategorizedService aiService
 
 startApp :: IO ()
 startApp = do

@@ -28,8 +28,9 @@ library
       Server
       Configs.Database
       Configs.Seed
-      Routes.HomePage
       Routes.AiGeneratedArticlesAPI
+      Routes.CreateNewsPage
+      Routes.HomePage
       Services.MessageService
       Services.AiGeneratedArticlesService
       Services.AiNewsCategorizedService

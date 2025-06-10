@@ -47,6 +47,11 @@ data HomePageDTO = HomePageDTO
   }
   deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
+data DTOBuilder = DTOBuilder
+  { aiNewsResponses :: [Entity AiNewsResponse]
+  }
+  deriving (Show, Eq, Generic)
+
 instance ToJSON QueryResponseDTO where
   toJSON = genericToJSON queryResponseJsonOptions
 
@@ -62,38 +67,6 @@ queryResponseJsonOptions =
           other -> other
     }
 
--- type HomePageAPI = "home_page" :> Get '[JSON] HomePageDTO
-
--- homePageServer :: Pool SqlBackend -> AiNewsResponseService -> Server HomePageAPI
--- homePageServer pool aiNewsResponseService = getHomePageHandler
---   where
---     getHomePageHandler :: Handler HomePageDTO
---     getHomePageHandler = do
---       liftIO $ putStrLn "get_home_page"
---       buildDTO aiNewsResponseService
-
--- buildDTO :: AiNewsResponseService -> Handler HomePageDTO
--- buildDTO aiNewsResponseService = do
---   aiNewsResponses <- runService aiNewsResponseService findAll
-
---   let dtos = map modelToDTO aiNewsResponses
---       sortedDtos = sortBy (comparing (Down . date)) dtos
-
---   return $ HomePageDTO sortedDtos
-
--- modelToDTO :: Entity AiNewsResponse -> QueryResponseDTO
--- modelToDTO (Entity entityId aiNewsResponse) =
---   QueryResponseDTO
---     { queryResponseId = T.pack . show $ fromSqlKey entityId,
---       message = aiNewsResponseInputMessage aiNewsResponse,
---       date = aiNewsResponseDate aiNewsResponse,
---       links = aiNewsResponseLinks aiNewsResponse,
---       urls = parseUrls $ aiNewsResponseUrls aiNewsResponse,
---       text = aiNewsResponseText aiNewsResponse
---     }
-
-
-
 type HomePageAPI = "home_page" :> Get '[JSON] HomePageDTO
 
 homePageServer :: Pool SqlBackend -> AiNewsResponseService -> Server HomePageAPI
@@ -102,17 +75,18 @@ homePageServer _ aiNewsResponseService = getHomePageHandler
     getHomePageHandler :: Handler HomePageDTO
     getHomePageHandler = do
       liftIO $ putStrLn "get_home_page"
-      buildHomePageDTO aiNewsResponseService
+      responses <- runService aiNewsResponseService findAll
+      let dtoBuilder = DTOBuilder responses
+      return $ toHomePageDTO dtoBuilder
 
-buildHomePageDTO :: AiNewsResponseService -> Handler HomePageDTO
-buildHomePageDTO aiNewsResponseService = do
-  aiNewsResponses <- runService aiNewsResponseService findAll
-  let dtos = map aiNewsResponseToDTO aiNewsResponses
+toHomePageDTO :: DTOBuilder -> HomePageDTO
+toHomePageDTO dtoBuilder =
+  let dtos = map toAiNewsResponseToDTO (aiNewsResponses dtoBuilder)
       sortedDtos = sortBy (comparing $ Down . date) dtos
-  return $ HomePageDTO sortedDtos
+   in HomePageDTO sortedDtos
 
-aiNewsResponseToDTO :: Entity AiNewsResponse -> QueryResponseDTO
-aiNewsResponseToDTO (Entity entityId aiNewsResponse) =
+toAiNewsResponseToDTO :: Entity AiNewsResponse -> QueryResponseDTO
+toAiNewsResponseToDTO (Entity entityId aiNewsResponse) =
   QueryResponseDTO
     { queryResponseId = T.pack . show $ fromSqlKey entityId,
       message = aiNewsResponseInputMessage aiNewsResponse,
