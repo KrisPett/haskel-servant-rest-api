@@ -1,31 +1,90 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Routes.HomePage
   ( PageAPI,
     pageServer,
+    QueryResponseDTO (..),
+    HomePageDTO (..),
   )
 where
 
 import Configs.Database (runDB)
 import Control.Monad.IO.Class (liftIO)
+import Data.Aeson
+  ( FromJSON (..),
+    ToJSON (..),
+    withObject,
+    (.:),
+    defaultOptions,
+    Options (fieldLabelModifier),
+    genericToJSON,
+    genericParseJSON,
+  )
+import Data.List (sortBy)
+import Data.Ord (Down (..), comparing)
 import Data.Pool
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.Persist
-import Database.Persist.Sql (SqlBackend)
-import Entity.Models (EntityField (..), Message (..), MessageId)
+import Database.Persist.Sql (SqlBackend, fromSqlKey) -- Import fromSqlKey
+import Entity.Models (AiNewsResponse (..), EntityField (..), Message (..), MessageId)
+import GHC.Generics (Generic)
 import Servant
+import Services.AiNewsResponseService (AiNewsResponseService, AiNewsResponseServiceI (..), runService)
+
+data QueryResponseDTO = QueryResponseDTO
+  { queryResponseId :: Text,
+    message :: Text,
+    date :: Text,
+    links :: Int,
+    urls :: [Text],
+    text :: Text
+  }
+  deriving (Show, Eq, Generic)
+
+instance ToJSON QueryResponseDTO where
+  toJSON = genericToJSON queryResponseJsonOptions
+
+instance FromJSON QueryResponseDTO where
+  parseJSON = genericParseJSON queryResponseJsonOptions
+
+queryResponseJsonOptions :: Options
+queryResponseJsonOptions = defaultOptions
+  { fieldLabelModifier = \s ->
+      case s of
+        "queryResponseId" -> "id"
+        other -> other
+  }
+
+data HomePageDTO = HomePageDTO
+  { queryResponses :: [QueryResponseDTO]
+  }
+  deriving (Show, Eq, Generic, ToJSON, FromJSON)
+
+data SearchWebQuery = SearchWebQuery
+  { searchWebQueryInputText :: Text
+  }
+  deriving (Show, Eq, Generic, ToJSON)
+
+instance FromJSON SearchWebQuery where
+  parseJSON = withObject "SearchWebQuery" $ \o -> do
+    inputText <- o .: "input_text"
+    return $ SearchWebQuery inputText
 
 type PageAPI =
   "home" :> Get '[PlainText] String
     :<|> "createNewsPage" :> Get '[PlainText] String
-    :<|> "messages" :> Get '[JSON] [Entity Message]
-    :<|> "messages" :> ReqBody '[JSON] Text :> Post '[JSON] (Entity Message)
+    :<|> "home-page" :> Get '[JSON] HomePageDTO
 
-pageServer :: Pool SqlBackend -> Server PageAPI
-pageServer pool = homeHandler :<|> createNewsPageHandler :<|> getAllMessages :<|> createMessage
+pageServer :: Pool SqlBackend -> AiNewsResponseService -> Server PageAPI
+pageServer pool aiNewsResponseService =
+  homeHandler
+    :<|> createNewsPageHandler
+    :<|> getHomePageHandler
   where
     homeHandler :: Handler String
     homeHandler = return "Welcome to the Home Page!"
@@ -33,11 +92,33 @@ pageServer pool = homeHandler :<|> createNewsPageHandler :<|> getAllMessages :<|
     createNewsPageHandler :: Handler String
     createNewsPageHandler = return "This is the Create News Page!"
 
-    getAllMessages :: Handler [Entity Message]
-    getAllMessages = liftIO $ runDB pool $ selectList [] []
+    getHomePageHandler :: Handler HomePageDTO
+    getHomePageHandler = do
+      liftIO $ putStrLn "get_home_page"
+      buildDTO aiNewsResponseService
 
-    createMessage :: Text -> Handler (Entity Message)
-    createMessage content = do
-      let msg = Message content
-      msgId <- liftIO $ runDB pool $ insert msg
-      return $ Entity msgId msg
+buildDTO :: AiNewsResponseService -> Handler HomePageDTO
+buildDTO aiNewsResponseService = do
+  aiNewsResponses <- runService aiNewsResponseService findAll
+
+  let dtos = map modelToDTO aiNewsResponses
+      sortedDtos = sortBy (comparing (Down . date)) dtos
+
+  return $ HomePageDTO sortedDtos
+
+modelToDTO :: Entity AiNewsResponse -> QueryResponseDTO
+modelToDTO (Entity entityId aiNewsResponse) =
+  QueryResponseDTO
+    { queryResponseId = T.pack . show $ fromSqlKey entityId,
+      message = aiNewsResponseInputMessage aiNewsResponse,
+      date = aiNewsResponseDate aiNewsResponse,
+      links = aiNewsResponseLinks aiNewsResponse,
+      urls = parseUrls $ aiNewsResponseUrls aiNewsResponse,
+      text = aiNewsResponseText aiNewsResponse
+    }
+
+parseUrls :: Text -> [Text]
+parseUrls urlsText =
+  if T.null urlsText
+    then []
+    else T.splitOn "," urlsText

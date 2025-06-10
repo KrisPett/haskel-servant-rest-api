@@ -17,6 +17,7 @@ import Routes.AiGeneratedArticlesAPI
 import Routes.HomePage
 import Servant
 import Services.AiGeneratedArticlesService
+import Services.AiNewsResponseService
 
 type API = PageAPI :<|> AiGeneratedArticlesAPI
 
@@ -26,7 +27,8 @@ api = Proxy
 server :: Pool SqlBackend -> Server API
 server pool =
   let aiService = newAiGeneratedArticlesService pool
-   in pageServer pool :<|> aiGeneratedArticlesServer aiService
+      aiNewsResponseService = newAiNewsResponseService pool
+   in pageServer pool aiNewsResponseService :<|> aiGeneratedArticlesServer aiService
 
 startApp :: IO ()
 startApp = do
