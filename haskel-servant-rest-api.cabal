@@ -31,7 +31,6 @@ library
       Routes.AiGeneratedArticlesAPI
       Routes.CreateNewsPage
       Routes.HomePage
-      Services.MessageService
       Services.AiGeneratedArticlesService
       Services.AiNewsCategorizedService
       Services.AiNewsResponseService

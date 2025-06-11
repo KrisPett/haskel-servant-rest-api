@@ -13,12 +13,11 @@ module Services.AiNewsResponseService
 where
 
 import Configs.Database (runDB)
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Reader (ReaderT, asks, runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.Pool (Pool)
 import Data.Text (Text)
-import qualified Data.Text as T
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist
 import Database.Persist.Sql (SqlBackend)

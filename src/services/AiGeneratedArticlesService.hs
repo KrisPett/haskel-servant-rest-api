@@ -13,15 +13,15 @@ module Services.AiGeneratedArticlesService
 where
 
 import Configs.Database (runDB)
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Reader (ReaderT, asks, runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.Pool (Pool)
 import Data.Text (Text)
 import Data.Time.Clock (getCurrentTime)
 import Database.Persist
 import Database.Persist.Sql (SqlBackend)
-import Entity.Models (AiGeneratedArticle (..), AiGeneratedArticleId, EntityField (AiGeneratedArticleId))
+import Entity.Models (AiGeneratedArticle (..), AiGeneratedArticleId)
 import Helpers.EntityHelpers (newAiGeneratedArticle)
 import Middlewares.ErrorHandler (AppError (..), throwAppError)
 import Servant (Handler)

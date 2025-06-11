@@ -51,42 +51,4 @@ AiNewsResponse
     urls Text
     text Text
     deriving Show Eq Generic
-
-Message
-    content Text
-    deriving Show Eq Generic
 |]
-
--- migrateAllEntities :: Migration
--- migrateAllEntities = migrateAll
-
--- JSON instances if needed:
-
--- instance ToJSON AiGeneratedArticle
--- instance FromJSON AiGeneratedArticle
-
--- instance ToJSON AiNewsCategorized
--- instance FromJSON AiNewsCategorized
-
--- instance ToJSON AiNewsResponse
--- instance FromJSON AiNewsResponse
-
-instance ToJSON Message
-
-instance FromJSON Message
-
-instance ToJSON (Entity Message) where
-  toJSON (Entity key val) = Aeson.toJSON (key, val)
-
-instance FromJSON (Entity Message) where
-  parseJSON v = do
-    (key, val) <- Aeson.parseJSON v
-    return (Entity key val)
-
--- instance ToJSON (Entity AiGeneratedArticle) where
---   toJSON (Entity key val) = Aeson.toJSON (key, val)
-
--- instance FromJSON (Entity AiGeneratedArticle) where
---   parseJSON v = do
---     (key, val) <- Aeson.parseJSON v
---     return (Entity key val)
