@@ -21,8 +21,8 @@ import Services.AiNewsResponseService
 import Services.AiNewsCategorizedService
 
 type API =
-  HomePageAPI
-    :<|> AiGeneratedArticlesAPI
+  AiGeneratedArticlesAPI
+    :<|> HomePageAPI
     :<|> CreateNewsPageAPI
 
 api :: Proxy API
@@ -43,12 +43,10 @@ mkAppContext pool = AppContext
   , aiNewsCategorizedService = newAiNewsCategorizedService pool
   }
 
-
--- | Servant server implementation
 server :: AppContext -> Server API
 server ctx = 
-       homePageServer (dbPool ctx) (aiNewsResponseService ctx)
-  :<|> aiGeneratedArticlesServer (aiService ctx)
+  aiGeneratedArticlesServer (aiService ctx)
+  :<|> homePageServer (dbPool ctx) (aiNewsResponseService ctx)
   :<|> createNewsPageServer 
          (dbPool ctx) 
          (aiNewsCategorizedService ctx) 
