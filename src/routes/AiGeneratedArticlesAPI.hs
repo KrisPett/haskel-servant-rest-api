@@ -14,7 +14,7 @@ where
 import Data.Aeson
 import Data.Text (Text)
 import qualified Data.Text as T
-import Database.Persist (Entity (..), Key)
+import Database.Persist (Entity (..))
 import Entity.Models (AiGeneratedArticle (..), AiGeneratedArticleId)
 import GHC.Generics (Generic)
 import Servant
@@ -76,7 +76,7 @@ aiGeneratedArticlesServer service =
     getArticleById articleId = do
       article <- runService service (findById articleId)
       return $ entityToResponse article
-      
+
     createArticle :: AiGeneratedArticleRequest -> Handler AiGeneratedArticleResponse
     createArticle req = do
       article <-

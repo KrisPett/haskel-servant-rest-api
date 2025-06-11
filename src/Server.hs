@@ -17,8 +17,8 @@ import Routes.CreateNewsPage
 import Routes.HomePage
 import Servant
 import Services.AiGeneratedArticlesService
-import Services.AiNewsResponseService
 import Services.AiNewsCategorizedService
+import Services.AiNewsResponseService
 
 type API =
   AiGeneratedArticlesAPI
@@ -29,28 +29,28 @@ api :: Proxy API
 api = Proxy
 
 data AppContext = AppContext
-  { dbPool :: Pool SqlBackend
-  , aiService :: AiGeneratedArticlesService
-  , aiNewsResponseService :: AiNewsResponseService  
-  , aiNewsCategorizedService :: AiNewsCategorizedService
+  { dbPool :: Pool SqlBackend,
+    aiService :: AiGeneratedArticlesService,
+    aiNewsResponseService :: AiNewsResponseService,
+    aiNewsCategorizedService :: AiNewsCategorizedService
   }
 
 mkAppContext :: Pool SqlBackend -> AppContext
-mkAppContext pool = AppContext
-  { dbPool = pool
-  , aiService = newAiGeneratedArticlesService pool
-  , aiNewsResponseService = newAiNewsResponseService pool
-  , aiNewsCategorizedService = newAiNewsCategorizedService pool
-  }
+mkAppContext pool =
+  AppContext
+    { dbPool = pool,
+      aiService = newAiGeneratedArticlesService pool,
+      aiNewsResponseService = newAiNewsResponseService pool,
+      aiNewsCategorizedService = newAiNewsCategorizedService pool
+    }
 
 server :: AppContext -> Server API
-server ctx = 
+server ctx =
   aiGeneratedArticlesServer (aiService ctx)
-  :<|> homePageServer (dbPool ctx) (aiNewsResponseService ctx)
-  :<|> createNewsPageServer 
-         (dbPool ctx) 
-         (aiNewsCategorizedService ctx) 
-         (aiService ctx)
+    :<|> homePageServer (dbPool ctx) (aiNewsResponseService ctx)
+    :<|> createNewsPageServer
+      (aiNewsCategorizedService ctx)
+      (aiService ctx)
 
 startApp :: IO ()
 startApp = do

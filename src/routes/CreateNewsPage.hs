@@ -96,11 +96,10 @@ data DTOBuilder = DTOBuilder
 type CreateNewsPageAPI = "create_news_page" :> QueryParam' '[Required, Strict] "selected_date" Text :> Get '[JSON] CreateNewsPageDTO
 
 createNewsPageServer ::
-  Pool SqlBackend ->
   AiNewsCategorizedService ->
   AiGeneratedArticlesService ->
   Server CreateNewsPageAPI
-createNewsPageServer _ categorizedService generatedService = getCreateNewsPageHandler
+createNewsPageServer categorizedService generatedService = getCreateNewsPageHandler
   where
     getCreateNewsPageHandler :: Text -> Handler CreateNewsPageDTO
     getCreateNewsPageHandler selectedDate =
