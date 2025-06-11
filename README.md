@@ -33,6 +33,6 @@ Imagine context as a box:
 
 🟦 Functor: You can apply a function inside the box, but not change the box.
 
-🟪 Applicative: You can apply a function in a box to a value in a box (multiple boxes working together).
+🟪 Applicative: You can apply a function in a box to a value in a another box (multiple boxes working together).
 
 🟥 Monad: You can look inside the box, do something, and return a new box (the next step can depend on the previous).
