@@ -28,14 +28,31 @@ type API =
 api :: Proxy API
 api = Proxy
 
-server :: Pool SqlBackend -> Server API
-server pool =
-  let aiService = newAiGeneratedArticlesService pool
-      aiNewsResponseService = newAiNewsResponseService pool
-      aiNewsCategorizedService = newAiNewsCategorizedService pool
-   in homePageServer pool aiNewsResponseService
-        :<|> aiGeneratedArticlesServer aiService
-        :<|> createNewsPageServer pool aiNewsCategorizedService aiService
+data AppContext = AppContext
+  { dbPool :: Pool SqlBackend
+  , aiService :: AiGeneratedArticlesService
+  , aiNewsResponseService :: AiNewsResponseService  
+  , aiNewsCategorizedService :: AiNewsCategorizedService
+  }
+
+mkAppContext :: Pool SqlBackend -> AppContext
+mkAppContext pool = AppContext
+  { dbPool = pool
+  , aiService = newAiGeneratedArticlesService pool
+  , aiNewsResponseService = newAiNewsResponseService pool
+  , aiNewsCategorizedService = newAiNewsCategorizedService pool
+  }
+
+
+-- | Servant server implementation
+server :: AppContext -> Server API
+server ctx = 
+       homePageServer (dbPool ctx) (aiNewsResponseService ctx)
+  :<|> aiGeneratedArticlesServer (aiService ctx)
+  :<|> createNewsPageServer 
+         (dbPool ctx) 
+         (aiNewsCategorizedService ctx) 
+         (aiService ctx)
 
 startApp :: IO ()
 startApp = do
@@ -47,7 +64,7 @@ startApp = do
   putStrLn "Database initialized successfully"
   seedDB pool
   putStrLn "Database seeded with initial data"
-  run 8080 (app pool)
+  run 8080 $ app pool
 
 app :: Pool SqlBackend -> Application
-app pool = serve api (server pool)
+app pool = serve api $ server $ mkAppContext pool
