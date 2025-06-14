@@ -46,7 +46,9 @@ runService service action = runReaderT action service
 instance AiGeneratedArticlesServiceI ServiceM where
   findAll = do
     pool <- asks servicePool
-    liftIO $ runDB pool $ selectList [] []
+    result <- liftIO $ runDB pool $ selectList [] []
+    liftIO $ putStrLn "Running AiGeneratedArticlesServiceI and fetching articles..."
+    pure result
 
   findById articleId = do
     pool <- asks servicePool

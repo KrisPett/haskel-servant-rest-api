@@ -13,6 +13,7 @@ module Routes.CreateNewsPage
   )
 where
 
+import Control.Concurrent.Async (async, wait)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
@@ -111,8 +112,24 @@ createNewsPageServer categorizedService generatedService = getCreateNewsPageHand
       where
         handler = do
           liftIO $ putStrLn $ "get_create_news_page - selected_date: " ++ T.unpack selectedDate
-          recentNews <- Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll
-          aiArticles <- Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll
+
+          aiArticlesAsync <- liftIO (async (do
+            result <- runHandler $ Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll
+            case result of
+              Left err -> fail $ show err
+              Right val -> return val
+            ))
+
+          recentNewsAsync <- liftIO (async (do
+            result <- runHandler $ Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll
+            case result of
+              Left err -> fail $ show err
+              Right val -> return val
+            ))
+
+          aiArticles <- liftIO $ wait aiArticlesAsync
+          recentNews <- liftIO $ wait recentNewsAsync
+
           let dtoBuilder =
                 DTOBuilder
                   { builderInputDateFieldOption = selectedDate,
