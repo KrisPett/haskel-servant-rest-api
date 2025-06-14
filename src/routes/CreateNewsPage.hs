@@ -13,22 +13,21 @@ module Routes.CreateNewsPage
   )
 where
 
-import Control.Concurrent.Async (async, concurrently, wait)
+import Control.Concurrent.Async (concurrently)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
-import Data.Pool (Pool)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Database.Persist
-import Database.Persist.Sql (SqlBackend, fromSqlKey)
+import Database.Persist.Sql (fromSqlKey)
 import Entity.Models
   ( AiGeneratedArticle (..),
     AiNewsCategorized (..),
   )
 import GHC.Generics (Generic)
-import Helpers.Time (parseUrls)
 import Helpers.Handler (unwrapServiceResult)
+import Helpers.Time (parseUrls)
 import Servant
 import Services.AiGeneratedArticlesService (AiGeneratedArticlesService, AiGeneratedArticlesServiceI (findAll), runService)
 import Services.AiNewsCategorizedService (AiNewsCategorizedService, AiNewsCategorizedServiceI (findAll), runService)
@@ -117,8 +116,8 @@ createNewsPageServer categorizedService generatedService = getCreateNewsPageHand
           (aiArticles, recentNews) <-
             liftIO $
               concurrently
-                (unwrapServiceResult  $ fmap (Right :: [Entity AiGeneratedArticle] -> Either String [Entity AiGeneratedArticle]) (Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll))
-                (unwrapServiceResult  $ fmap (Right :: [Entity AiNewsCategorized] -> Either String [Entity AiNewsCategorized]) (Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll))
+                (unwrapServiceResult $ Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll)
+                (unwrapServiceResult $ Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll)
 
           let dtoBuilder =
                 DTOBuilder
