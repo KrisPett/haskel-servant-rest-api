@@ -11,7 +11,7 @@ import Data.Text (Text)
 import Entity.Models (AiGeneratedArticle(..), AiNewsCategorized(..), AiNewsResponse(..))
 
 -- AiGeneratedArticle constructor
-newAiGeneratedArticle :: UTCTime -> Text -> Text -> Text -> AiGeneratedArticle
+newAiGeneratedArticle :: UTCTime -> Text -> Maybe Text -> Text -> AiGeneratedArticle
 newAiGeneratedArticle now title desc content = AiGeneratedArticle
   { aiGeneratedArticleCreatedAt = now
   , aiGeneratedArticleUpdatedAt = now

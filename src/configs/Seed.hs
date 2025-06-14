@@ -27,7 +27,7 @@ seed = do
       newAiGeneratedArticle
         now
         "The Ethics of AI"
-        "Exploring moral implications of AI"
+        Nothing
         "Ethics in AI covers bias, privacy, and accountability..."
 
     insert_ $
@@ -35,7 +35,7 @@ seed = do
         { aiGeneratedArticleCreatedAt = parseUTC "2024-05-01 00:00:00",
           aiGeneratedArticleUpdatedAt = parseUTC "2024-05-01 00:00:00",
           aiGeneratedArticleTitle = "AI in Transportation",
-          aiGeneratedArticleDescription = "Self-driving cars and beyond",
+          aiGeneratedArticleDescription = Just "Self-driving cars and beyond",
           aiGeneratedArticleContent = "AI is shaping the future of how we travel..."
         }
 

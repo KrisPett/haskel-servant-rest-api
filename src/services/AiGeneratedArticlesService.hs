@@ -29,7 +29,7 @@ import Servant (Handler)
 class (Monad m) => AiGeneratedArticlesServiceI m where
   findAll :: m [Entity AiGeneratedArticle]
   findById :: AiGeneratedArticleId -> m (Entity AiGeneratedArticle)
-  insertArticle :: Text -> Text -> Text -> m (Entity AiGeneratedArticle)
+  insertArticle :: Text -> Maybe Text -> Text -> m (Entity AiGeneratedArticle)
 
 newtype AiGeneratedArticlesService = AiGeneratedArticlesService
   { servicePool :: Pool SqlBackend

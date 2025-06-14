@@ -30,7 +30,7 @@ AiGeneratedArticle
     createdAt UTCTime
     updatedAt UTCTime
     title Text
-    description Text
+    description Text Maybe
     content Text
     deriving Show Eq Generic
 

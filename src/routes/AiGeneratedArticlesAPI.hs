@@ -22,7 +22,7 @@ import Services.AiGeneratedArticlesService
 
 data AiGeneratedArticleRequest = AiGeneratedArticleRequest
   { reqTitle :: Text,
-    reqDescription :: Text,
+    reqDescription :: Maybe Text,
     reqContent :: Text
   }
   deriving (Show, Eq, Generic)
@@ -34,7 +34,7 @@ instance ToJSON AiGeneratedArticleRequest
 data AiGeneratedArticleResponse = AiGeneratedArticleResponse
   { respId :: Text,
     respTitle :: Text,
-    respDescription :: Text,
+    respDescription :: Maybe Text,
     respContent :: Text,
     respCreatedAt :: Text,
     respUpdatedAt :: Text

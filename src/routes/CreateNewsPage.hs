@@ -48,6 +48,7 @@ aiArticlesOptions =
         "agaId" -> "id"
         "agaTitle" -> "title"
         "agaDescription" -> "description"
+        "updatedAt" -> "updatedAt"
         other -> other
     }
 
@@ -67,7 +68,8 @@ instance FromJSON RecentNewsSearchResultsDTO where
 data AIGeneratedArticlesDTO = AIGeneratedArticlesDTO
   { agaId :: Text,
     agaTitle :: Text,
-    agaDescription :: Text
+    agaDescription :: Maybe Text,
+    updatedAt :: Text
   }
   deriving (Show, Eq, Generic)
 
@@ -142,5 +144,6 @@ toAIGeneratedDTO (Entity entityId entity) =
   AIGeneratedArticlesDTO
     { agaId = T.pack . show $ fromSqlKey entityId,
       agaTitle = aiGeneratedArticleTitle entity,
-      agaDescription = aiGeneratedArticleDescription entity
+      agaDescription = aiGeneratedArticleDescription entity,
+      updatedAt = T.pack . show $ aiGeneratedArticleUpdatedAt entity
     }
