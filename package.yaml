@@ -72,6 +72,7 @@ library:
     - Entity.Models
     - Helpers.Time
     - Helpers.EntityHelpers
+    - Helpers.Handler 
 
 executables:
   haskel-servant-rest-api-exe:

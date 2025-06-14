@@ -38,6 +38,7 @@ library
       Entity.Models
       Helpers.Time
       Helpers.EntityHelpers
+      Helpers.Handler
   other-modules:
       Paths_haskel_servant_rest_api
   autogen-modules:

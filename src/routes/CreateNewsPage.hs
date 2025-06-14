@@ -13,7 +13,7 @@ module Routes.CreateNewsPage
   )
 where
 
-import Control.Concurrent.Async (async, wait)
+import Control.Concurrent.Async (async, concurrently, wait)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson
@@ -28,6 +28,7 @@ import Entity.Models
   )
 import GHC.Generics (Generic)
 import Helpers.Time (parseUrls)
+import Helpers.Handler (unwrapServiceResult)
 import Servant
 import Services.AiGeneratedArticlesService (AiGeneratedArticlesService, AiGeneratedArticlesServiceI (findAll), runService)
 import Services.AiNewsCategorizedService (AiNewsCategorizedService, AiNewsCategorizedServiceI (findAll), runService)
@@ -113,22 +114,11 @@ createNewsPageServer categorizedService generatedService = getCreateNewsPageHand
         handler = do
           liftIO $ putStrLn $ "get_create_news_page - selected_date: " ++ T.unpack selectedDate
 
-          aiArticlesAsync <- liftIO (async (do
-            result <- runHandler $ Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll
-            case result of
-              Left err -> fail $ show err
-              Right val -> return val
-            ))
-
-          recentNewsAsync <- liftIO (async (do
-            result <- runHandler $ Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll
-            case result of
-              Left err -> fail $ show err
-              Right val -> return val
-            ))
-
-          aiArticles <- liftIO $ wait aiArticlesAsync
-          recentNews <- liftIO $ wait recentNewsAsync
+          (aiArticles, recentNews) <-
+            liftIO $
+              concurrently
+                (unwrapServiceResult  $ fmap (Right :: [Entity AiGeneratedArticle] -> Either String [Entity AiGeneratedArticle]) (Services.AiGeneratedArticlesService.runService generatedService Services.AiGeneratedArticlesService.findAll))
+                (unwrapServiceResult  $ fmap (Right :: [Entity AiNewsCategorized] -> Either String [Entity AiNewsCategorized]) (Services.AiNewsCategorizedService.runService categorizedService Services.AiNewsCategorizedService.findAll))
 
           let dtoBuilder =
                 DTOBuilder
